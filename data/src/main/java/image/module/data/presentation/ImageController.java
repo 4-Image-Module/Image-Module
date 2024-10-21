@@ -45,4 +45,13 @@ public class ImageController {
         imageService.updateImage(updateImageData); // Image 업데이트 로직
 
     }
+
+    // 리사이즈 WebP 이미지 DB 저장
+    @PostMapping("/image/create/resize")
+    public void createResizeImage(
+            @RequestBody CreateResizeRequest createResizeRequest
+    ) {
+        imageService.creatImage(createResizeRequest); // Image 업데이트 로직
+
+    }
 }

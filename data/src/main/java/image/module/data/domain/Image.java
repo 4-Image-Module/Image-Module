@@ -1,5 +1,6 @@
 package image.module.data.domain;
 
+import image.module.data.presentation.CreateResizeRequest;
 import image.module.data.presentation.ImageRequest;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -66,6 +67,18 @@ public class Image extends BaseEntity {
 
     public void assignOriginalFileUUID(){
         this.originalFileUUID = this.id;
+    }
+
+    public static Image createResize(Image image, CreateResizeRequest createResizeRequest){
+        return Image.builder()
+                .originalFileName(image.getOriginalFileName())
+                .storedFileName(createResizeRequest.getStoredFileName() + "_" + createResizeRequest.getSize())
+                .cdnUrl(createResizeRequest.getCdnBaseUrl())
+                .fileType(createResizeRequest.getType())
+                .size(createResizeRequest.getSize())
+                .cachingTime(image.getCachingTime())
+                .originalFileUUID(image.getOriginalFileUUID())
+                .build();
     }
 
 }

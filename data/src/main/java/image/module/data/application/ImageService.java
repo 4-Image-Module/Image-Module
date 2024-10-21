@@ -2,6 +2,7 @@ package image.module.data.application;
 
 import image.module.data.domain.Image;
 import image.module.data.domain.repository.ImageRepository;
+import image.module.data.presentation.CreateResizeRequest;
 import image.module.data.presentation.ImageRequest;
 import image.module.data.presentation.UpdateImageData;
 import jakarta.persistence.EntityNotFoundException;
@@ -51,5 +52,16 @@ public class ImageService {
         imageRepository.save(image);
     }
 
+
+    // 리사이즈 WebP 이미지 DB 저장
+    public void creatImage(CreateResizeRequest createResizeRequest) {
+
+        Image image = imageRepository.findByStoredFileName(createResizeRequest.getStoredFileName()).orElseThrow(
+                () -> new IllegalArgumentException("저장된 파일 이름을 찾을 수 없습니다")
+        );
+        Image SaveResizeimage = Image.createResize(image, createResizeRequest);
+        imageRepository.save(SaveResizeimage);
+
+    }
 
 }
