@@ -55,7 +55,7 @@ public class ImageService {
     String extension = extractExtensionFromMinio(StoredFileName);
 
     // 이미지 다운로드
-    InputStream originalFile = downloadImage(StoredFileName);
+    InputStream originalFile = downloadImage(StoredFileName); // 다운로드
 
     // 원본 이미지 복사
     File copyOriginalFile = copyOriginalImage(originalFile, extension);
@@ -78,7 +78,8 @@ public class ImageService {
     dataClient.updateImageData(updateImageDataInfo);
 
     // TODO Kafka Dto를 통해서  webpFile.getName, Size 보내주기
-    kafkaTemplate.send("image-resize-topic", SendKafkaMessage.createMessage(webpFile.getName(), size));
+    log.info("##### webFile.getName" + webpFile.getName());
+    kafkaTemplate.send("image-resize-topic", SendKafkaMessage.createMessage(webpFile.getName(), size)); // .webp , size
 
     // 10. 임시 파일 삭제
     cleanupTemporaryFiles(copyOriginalFile, webpFile);

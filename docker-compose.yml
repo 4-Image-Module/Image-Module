@@ -32,11 +32,6 @@ services:
       - "19096:19096"
     networks:
       - image_network
-    depends_on:
-      - eureka
-      - gateway
-      - data
-      - redis
     env_file:
       - .env
   url:
@@ -48,10 +43,6 @@ services:
       - "19093:19093"
     networks:
       - image_network
-    depends_on:
-      - eureka
-      - gateway
-      - data
     env_file:
       - .env
   data:
@@ -63,9 +54,6 @@ services:
       - "19095:19095"
     networks:
       - image_network
-    depends_on:
-      - eureka
-      - gateway
     env_file:
       - .env
   upload:
@@ -79,11 +67,6 @@ services:
       - image_network
     env_file:
       - .env
-    depends_on:
-      - eureka
-      - gateway
-      - data
-      - kafka
   convert:
     build:
       dockerfile: Dockerfile
@@ -93,11 +76,6 @@ services:
       - "19097:19097"
     networks:
       - image_network
-    depends_on:
-      - eureka
-      - gateway
-      - data
-      - kafka
     env_file:
       - .env
   resize:
@@ -109,11 +87,6 @@ services:
       - "19098:19098"
     networks:
       - image_network
-    depends_on:
-      - eureka
-      - gateway
-      - data
-      - kafka
     env_file:
       - .env
   server-data-db:
