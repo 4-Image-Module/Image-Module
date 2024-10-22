@@ -28,19 +28,20 @@ public abstract class BaseEntity {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
+    ZoneId zoneId = ZoneId.of("Asia/Seoul");
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));  // KST로 저장
-        this.updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));  // KST로 저장
+        this.createdAt = LocalDateTime.now(zoneId);  // KST로 저장
+        this.updatedAt = LocalDateTime.now(zoneId);  // KST로 저장
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));  // KST로 저장
+        this.updatedAt = LocalDateTime.now(zoneId);  // KST로 저장
     }
 
     public void delete() {
         this.isDeleted = true;
-        this.deletedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));  // KST로 저장
+        this.deletedAt = LocalDateTime.now(zoneId);  // KST로 저장
     }
 }
