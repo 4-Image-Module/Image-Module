@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.UUID;
 import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,7 @@ public class UrlService {
 
             // 헤더 설정
             HttpHeaders headers = new HttpHeaders();
-            String encodedFileName = URLEncoder.encode(imageResponse.getOriginalFileName(), StandardCharsets.UTF_8);
+            String encodedFileName = Base64.getEncoder().encodeToString(imageResponse.getOriginalFileName().getBytes(StandardCharsets.UTF_8));
             headers.add("fileName", encodedFileName);
             headers.add("File-Type", imageResponse.getFileType());
             headers.add("cache-time", imageResponse.getCachingTime().toString());
