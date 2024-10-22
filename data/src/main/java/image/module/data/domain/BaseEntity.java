@@ -17,6 +17,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
+    private final ZoneId zoneId = ZoneId.of("Asia/Seoul");
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -28,7 +29,6 @@ public abstract class BaseEntity {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    ZoneId zoneId = ZoneId.of("Asia/Seoul");
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now(zoneId);  // KST로 저장
