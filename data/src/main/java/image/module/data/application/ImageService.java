@@ -48,13 +48,13 @@ public class ImageService {
         Image image = imageRepository.findByStoredFileName(updateImageData.getStoredFileName()).orElseThrow(
                 () ->  new EntityNotFoundException("저장된 파일 이름을 찾을 수 없습니다")
         );
-        image.updateImageData(updateImageData.getSize(), updateImageData.getCdnBaseUrl());
+        image.updateImageData(updateImageData.getCdnBaseUrl());
         imageRepository.save(image);
     }
 
 
     // 리사이즈 WebP 이미지 DB 저장
-    public void creatImage(CreateResizeRequest createResizeRequest) {
+    public void createImage(CreateResizeRequest createResizeRequest) {
 
         Image image = imageRepository.findByStoredFileName(createResizeRequest.getStoredFileName()).orElseThrow(
                 () -> new IllegalArgumentException("저장된 파일 이름을 찾을 수 없습니다")

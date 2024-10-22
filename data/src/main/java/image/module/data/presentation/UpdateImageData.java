@@ -12,6 +12,5 @@ import java.util.UUID;
 public class UpdateImageData {
   private UUID id;
   private String storedFileName;
-  private Integer size;
   private String cdnBaseUrl;
 }

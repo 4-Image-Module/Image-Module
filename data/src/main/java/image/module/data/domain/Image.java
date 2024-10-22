@@ -60,8 +60,7 @@ public class Image extends BaseEntity {
                 .build();
     }
 
-    public void updateImageData(Integer size, String cdnUrl){
-        this.size = size;
+    public void updateImageData(String cdnUrl){
         this.cdnUrl = cdnUrl;
     }
 
