@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -31,6 +32,7 @@ public class UploadService {
     private String bucketName;
 
     //이미지 데이터 db 저장
+    @Transactional
     public CompletableFuture<String> saveImageMetadata(MultipartFile file, int requestSize, int cachingTime) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -60,13 +62,13 @@ public class UploadService {
                         cachingTime
                 );
 
+                uploadImage(file.getInputStream(), file.getSize(), file.getContentType(), imageRequest.getStoredFileName(), requestSize);
+
                 // 메타데이터 저장
                 ImageResponse imageResponse = dataService.uploadImage(imageRequest);
 
-                uploadImage(file.getInputStream(), file.getSize(), file.getContentType(), imageResponse, requestSize);
-
                 return imageResponse.getOriginalFileUUID().toString();
-            } catch (Exception e) {//TODO:db 데이터 삭제?
+            } catch (Exception e) {
                 log.error("이미지 메타데이터 저장 중 오류 발생: ", e);
                 throw new RuntimeException(e);
             }
@@ -75,16 +77,16 @@ public class UploadService {
 
     //이미지 업로드
     @SneakyThrows
-    public void uploadImage(InputStream fileInputStream, long size, String contentType, ImageResponse image, int requestSize) {
+    public void uploadImage(InputStream fileInputStream, long size, String contentType, String storedFileName, int requestSize) {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(image.getStoredFileName())
+                            .object(storedFileName)
                             .stream(fileInputStream, size, -1)
                             .contentType(contentType)
                             .build()
             );
 
-            kafkaTemplate.send("image-upload-topic", ImageUploadMessage.createMessage(image.getStoredFileName(),requestSize));
+            kafkaTemplate.send("image-upload-topic", ImageUploadMessage.createMessage(storedFileName,requestSize));
     }
 }
