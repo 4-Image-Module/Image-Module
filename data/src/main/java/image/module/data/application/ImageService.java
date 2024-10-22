@@ -64,4 +64,11 @@ public class ImageService {
 
     }
 
+    // 이미지 resizing cdn url 반환 g
+    public ImageResponse getReCdnUrl(UUID originalFileUUID, Integer size) {
+        Image image = imageRepository.findByOriginalFileUuidAndSize(originalFileUUID, size)
+                .orElseThrow(() -> new RuntimeException("이미지를 찾을 수 없습니다."));
+
+        return ImageResponse.fromEntity(image);
+    }
 }

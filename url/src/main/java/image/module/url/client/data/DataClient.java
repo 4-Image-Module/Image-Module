@@ -2,7 +2,6 @@ package image.module.url.client.data;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.UUID;
@@ -24,5 +23,9 @@ public interface DataClient extends DataService {
     ImageResponse getCDNImageName(@RequestParam("cdnUrl") String cdnUrl);
 
 
+    //resizing 된 cdn url 반환
+    @GetMapping("/image/getReCdnUrl")
+    ImageResponse getReCdnUrl(@RequestParam("originalFileUUID") UUID originalFileUUID,
+                              @RequestParam("size") Integer size);
     }
 

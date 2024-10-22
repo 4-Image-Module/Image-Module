@@ -1,7 +1,6 @@
 package image.module.url.controller;
 
-import image.module.url.client.data.DataService;
-import image.module.url.client.data.ImageResponse;
+
 import image.module.url.service.UrlService;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
@@ -16,34 +15,30 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/fetch")
 public class UrlController {
 
-    private final DataService dataService;
+
     private final UrlService urlService;
 
 
-    public UrlController(DataService dataService, UrlService urlService) {
-        this.dataService = dataService;
+    public UrlController( UrlService urlService) {
         this.urlService = urlService;
     }
 
 
-   //uuid 조회시 cdn Url 반환
+    //uuid 조회시 cdn Url 반환
     @GetMapping("/cdnUrl")
-    public ResponseEntity<String> getImage(@RequestParam("id") UUID id) {
+    public ResponseEntity<String> getImage(@RequestParam("id") UUID id,
+                                           @RequestParam(value = "size", required = false ) Integer size){
 
-        // 1. UUID로 cdnUrl 조회
-        ImageResponse imageResponse = dataService.getImageName(id);
 
-        // cdnUrl이 null인지 확인
-        if (imageResponse == null || imageResponse.getCdnUrl() == null) {
-            String message = "이미지를 찾을 수 없거나 CDN URL이 없습니다.";
-            log.warn(message);
-            return ResponseEntity.ok(message); // 200 OK와 함께 메시지 반환
+
+        //원본 : size null 일 때
+        if(size==null){
+            return urlService.getCdnUrl(id);
         }
 
-        String cdnUrl = imageResponse.getCdnUrl();
-        log.info("CDN URL: {}", cdnUrl);
+        //리사이징 된 이미지 조회
 
-        return ResponseEntity.ok(cdnUrl); // 정상적으로 CDN URL 반환
+        return urlService.getReCdnUrl(id, size);
     }
 
 
