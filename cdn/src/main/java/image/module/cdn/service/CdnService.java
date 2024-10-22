@@ -54,7 +54,7 @@ public class CdnService {
 
         ImageResponseDto imageResponseDto = getImageInfo(fileLocation);
 
-        String imageOriginalName = getOriginalNameByPath(fileLocation) + "." + getImageType(fileLocation);
+        String imageOriginalName = getOriginalNameByPath(fileLocation);
 
         imageResponseDto.getHeaders().setContentDispositionFormData("attachment", imageOriginalName);
 
@@ -68,6 +68,7 @@ public class CdnService {
 
         // 파일의 MIME 타입을 동적으로 추출
         String imageType = getImageType(fileLocation);
+        log.info("이미지 타입: " + imageType);
 
         // 응답 헤더 설정
         HttpHeaders headers = new HttpHeaders();
@@ -190,9 +191,13 @@ public class CdnService {
         String fileName = headerFileName.substring(0, headerFileName.lastIndexOf("."));
         Integer cachingTime = Integer.parseInt(headerCachingTime);
 
+        // 확장자 추출
+        String fileExtension = headerFileName.substring(headerFileName.lastIndexOf("."));
+
         // cdn에 저장할 이미지 이름 생성
         String cdnImageName = cdnUrl.replace(getPartCdnUrl(), "");
-        String saveFileName = fileName + "_" + cdnImageName;
+        String saveFileName = fileName + "_" + cdnImageName + "." + fileExtension;
+        log.info("저장될 파일명: " + saveFileName);
 
         // 이미지 저장
         String fileLocation = saveImageInCdn(imageByte, saveFileName);
@@ -209,13 +214,14 @@ public class CdnService {
         // FILE_PATH/originalName_cdnImageName - FILE_PATH/
         String removeFilePath = fileLocation.replace(filePath, "");
 
-        int removedIndex = removeFilePath.indexOf('_');
+        int startIndex = removeFilePath.indexOf('_');
+        int endIndex = removeFilePath.indexOf('.');
 
-        if (removedIndex == -1) {
+        if (startIndex == -1 || endIndex == -1 || startIndex >= endIndex) {
             throw new IllegalArgumentException("잘못된 이미지 이름 형식 입니다: " + removeFilePath);
         }
 
-        // originalName_cdnImageName - _cdnImageName
-        return removeFilePath.substring(0, removedIndex);
+        // originalName_cdnImageName.확장자 - _cdnImageName
+        return removeFilePath.substring(0, startIndex) + removeFilePath.substring(endIndex);
     }
 }

@@ -2,7 +2,6 @@ package image.module.url.service;
 
 import image.module.url.client.data.DataService;
 import image.module.url.client.data.ImageResponse;
-import image.module.url.dto.ImageDto;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import java.awt.image.BufferedImage;
@@ -17,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -36,24 +34,6 @@ public class UrlService {
     @Value("${minio.buckets.downloadBucket}")
     private String downloadBucket;
 
-    public ImageDto fetchImage(String cdnUrl) {
-        // CDN URL을 통해 데이터베이스에서 파일 이름 조회
-        log.info("받은 CDN URL: {}", cdnUrl);
-        ImageResponse imageResponse = dataService.getCDNImageName(URLEncoder.encode(cdnUrl, StandardCharsets.UTF_8));
-
-        // imageResponse가 null인지 확인
-        if (imageResponse == null) {
-            throw new RuntimeException("제공된 CDN URL에 대한 이미지를 찾을 수 없습니다.");
-        }
-
-        String fileName = imageResponse.getStoredFileName();
-        String fileType = imageResponse.getFileType();
-        log.info("저장된 파일명: {}", fileName);
-        log.info("파일 타입: {}", fileType);
-
-        // ImageDto 생성 및 반환
-        return new ImageDto(fileName);
-    }
 
 
     public ResponseEntity<byte[]> fetchImageByte(String cdnUrl) {
@@ -62,6 +42,7 @@ public class UrlService {
 
             //data server에서 image 정보 조회 메서드
             ImageResponse imageResponse = getImageResponse(cdnUrl);
+
 
             // 조회한 이미지에서 storedFileName , originalFileName , fileType 조회
             String fileName = imageResponse.getOriginalFileName();
@@ -81,8 +62,8 @@ public class UrlService {
             // 이미지 변환 및 바이트 배열 변환 로직
             byte[] imageBytes = convertImageToBytes(inputStream, fileType);
 
-            if (imageBytes == null || imageBytes.length == 0) {
-                throw new RuntimeException("이미지 바이트가 null이거나 비어 있습니다.");
+            if (imageBytes.length == 0) {
+                throw new RuntimeException("이미지 바이트가 비어 있습니다.");
             }
 
             log.info("이미지 바이트 길이: {}", imageBytes.length);

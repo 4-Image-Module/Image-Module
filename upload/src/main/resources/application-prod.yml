@@ -1,29 +1,2 @@
-spring:
-  application:
-    name: upload
-  kafka:
-    bootstrap-servers: ${KAFKA_URL}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-  servlet:
-    multipart:
-      max-file-size: 1GB # 최대 파일 사이즈
-      max-request-size: 1GB # 최대 요청 사이즈
-
-server:
-  port: 19092
-
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_URL}
-
-minio:
-  url: ${MINIO_URL}
-  accessKey: minio
-  secretKey: minioadmin
-  bucket: mybucket
-
 cdn-server:
   url: ${CDN_URL}
