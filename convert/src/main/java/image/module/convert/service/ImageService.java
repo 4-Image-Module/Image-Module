@@ -1,5 +1,9 @@
 package image.module.convert.service;
 
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifIFD0Directory;
 import com.sksamuel.scrimage.ImmutableImage;
 import com.sksamuel.scrimage.webp.WebpWriter;
 import image.module.convert.DataClient;
@@ -10,6 +14,7 @@ import io.minio.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.imgscalr.Scalr;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -21,6 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -60,45 +66,45 @@ public class ImageService {
     // 원본 이미지 복사
     File copyOriginalFile = copyOriginalImage(originalFile, extension);
 
-    //4. MINIO 원본 이미지 삭제
+  //  4. MINIO 원본 이미지 삭제
     removeOriginalImage(StoredFileName);
 
-    // EXIF 메타데이터 삭제
-    File noExifFile = removeExifMetadata(copyOriginalFile, extension);
-
+    // 5. EXIF 메타 데이터 삭제 및 이미지 회전 처리
+    File  checkedRotate = removeMetadataAndFixOrientation(copyOriginalFile, extension);
     // MINIO로 업로드
-    uploadImageToMinio(noExifFile, StoredFileName, extension);
+    uploadImageToMinio(checkedRotate, StoredFileName, extension);
 
-    // 7. 복사 이미지 WebP로 변환
+    // 6. 복사 이미지 WebP로 변환
     File webpFile = convertToWebp(StoredFileName, copyOriginalFile);
-    // 8. WebP 이미지 업로드
+
+    // 7. WebP 이미지 업로드
     uploadWebPImage(webpFile);
-    // 9. DB 업데이트 / Size, cdnUrl 추가
+
+    // 8. 원본 이미지 cdnUrl 추가
     UpdateImageData updateImageDataInfo = UpdateImageData.create(StoredFileName, size, cdnBaseUrl);
     dataClient.updateImageData(updateImageDataInfo);
 
-    // TODO Kafka Dto를 통해서  webpFile.getName, Size 보내주기
-    log.info("##### webFile.getName" + webpFile.getName());
-    kafkaTemplate.send("image-resize-topic", SendKafkaMessage.createMessage(webpFile.getName(), size)); // .webp , size
+    kafkaTemplate.send("image-resize-topic", SendKafkaMessage.createMessage(webpFile.getName(), size));
 
-    // 10. 임시 파일 삭제
-    cleanupTemporaryFiles(copyOriginalFile, webpFile);
+    // 9. 임시 파일 삭제
+    cleanupTemporaryFiles(copyOriginalFile,checkedRotate, webpFile);
   }
+
+
 
   // 확장자 추출 메서드
   private String extractExtensionFromMinio(String fileName) {
     try {
-      // MinIO에서 객체의 메타데이터 가져오기
       StatObjectResponse statObject = minioClient.statObject(
               StatObjectArgs.builder()
-                      .bucket(originalBucket)    // 버킷 이름
-                      .object(fileName)          // 치환된 이미지 객체 이름
+                      .bucket(originalBucket)
+                      .object(fileName)
                       .build()
       );
 
       // Content-Type 출력
       String contentType = statObject.contentType(); // ex) image/jpeg
-      // Content-Type에서 확장자 가져오기
+      // Content-Type에서 확장자 가져오기 / ex) jpeg
       return extractExtensionFromContentType(contentType);
 
     } catch (Exception e) {
@@ -157,22 +163,49 @@ public class ImageService {
     }
   }
 
-
-  // EXIF 메타데이터 삭제 메서드
-  private File removeExifMetadata(File originalFile, String extension) {
+  // 5. EXIF 메타 데이터 삭제 및 이미지 회전 처리
+  private File removeMetadataAndFixOrientation(File copyOriginalFile, String extension) {
     try {
-      // 이미지를 읽어서 BufferedImage로 변환
-      BufferedImage bufferedImage = ImageIO.read(originalFile);
+
+      BufferedImage bufferedImage = ImageIO.read(copyOriginalFile);
+
+      int orientation = 1;
+      Metadata metadata;
+      Directory directory;
+
+      try {
+        metadata = ImageMetadataReader.readMetadata(copyOriginalFile);
+        directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+        if (directory != null) {
+          orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+        }
+      } catch (Exception e) {
+        orientation = 1; // 메타데이터 읽기 실패 시 기본 방향(1) 설정
+      }
+
+      switch (orientation) {
+        case 3:
+          bufferedImage = Scalr.rotate(bufferedImage, Scalr.Rotation.CW_180);
+          break;
+        case 6:
+          bufferedImage = Scalr.rotate(bufferedImage, Scalr.Rotation.CW_90);
+          break;
+        case 8:
+          bufferedImage = Scalr.rotate(bufferedImage, Scalr.Rotation.CW_270);
+          break;
+        default:
+          break; // orientation 1일 때는 아무 작업도 하지 않음
+      }
+
 
       // 임시 파일 생성
-      File noExifFile = File.createTempFile("no-exif-", "." + extension);
+      File imageRotateFile = File.createTempFile("rotate-", "." + extension);
+      // 새로운 파일로 저장
+      ImageIO.write(bufferedImage, extension, imageRotateFile);
 
-      // EXIF 메타데이터 제거 후 이미지 저장
-      ImageIO.write(bufferedImage, extension, noExifFile);
-
-      return noExifFile;
-    } catch (IOException e) {
-      throw new IllegalArgumentException("EXIF 메타데이터 삭제 실패: " + e.getMessage());
+      return imageRotateFile;
+    } catch (Exception e) {
+      throw new IllegalArgumentException("메타 데이터 삭제 및 이미지 회전 오류 발생: " + e.getMessage(), e);
     }
   }
 
