@@ -74,7 +74,7 @@ public class ImageService {
     // 8. WebP 이미지 업로드
     uploadWebPImage(webpFile);
     // 9. DB 업데이트 / Size, cdnUrl 추가
-    UpdateImageData updateImageDataInfo = UpdateImageData.create(StoredFileName, size, cdnBaseUrl);
+    UpdateImageData updateImageDataInfo = UpdateImageData.create(StoredFileName, cdnBaseUrl);
     dataClient.updateImageData(updateImageDataInfo);
 
     // TODO Kafka Dto를 통해서  webpFile.getName, Size 보내주기

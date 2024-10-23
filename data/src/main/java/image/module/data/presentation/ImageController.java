@@ -51,7 +51,7 @@ public class ImageController {
     public void createResizeImage(
             @RequestBody CreateResizeRequest createResizeRequest
     ) {
-        imageService.creatImage(createResizeRequest); // Image 업데이트 로직
+        imageService.createImage(createResizeRequest); // Image 업데이트 로직
 
     }
 
