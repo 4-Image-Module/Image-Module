@@ -54,4 +54,11 @@ public class ImageController {
         imageService.creatImage(createResizeRequest); // Image 업데이트 로직
 
     }
+
+    //원본 uuid 와 size의 cdn url 반환
+    @GetMapping("/image/getReCdnUrl")
+    public ImageResponse getReCdnUrl(@RequestParam("originalFileUUID") UUID originalFileUUID,
+                                     @RequestParam("size") Integer size){
+        return imageService.getReCdnUrl(originalFileUUID,size);
+    }
 }
