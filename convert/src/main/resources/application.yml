@@ -20,7 +20,7 @@ spring:
                 class: org.springframework.kafka.support.serializer.JsonDeserializer
           json:
             type:
-              mapping: "image.module.upload.application.ImageUploadMessage:image.module.convert.dto.UploadMessage"
+              mapping: "image.module.upload.application.ImageUploadMessage:image.module.convert.dto.OriginalImageResponse"
 server:
   port: 19097
 
