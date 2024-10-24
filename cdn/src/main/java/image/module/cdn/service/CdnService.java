@@ -4,6 +4,7 @@ import image.module.cdn.client.UrlServiceClient;
 import image.module.cdn.dto.ImageResponseDto;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -204,7 +205,7 @@ public class CdnService {
         byte[] imageByte = imageResponse.getBody();
 
         // Header에서 필요한 값들 추출
-        String headerFileName = headers.getFirst("fileName");
+        String headerFileName = URLDecoder.decode(headers.getFirst("fileName"), StandardCharsets.UTF_8);
         String headerCachingTime = headers.getFirst("cache-time");
 
         // 필요한 값들 가공
