@@ -3,10 +3,12 @@ package image.module.data.presentation;
 import image.module.data.application.ImageResponse;
 import image.module.data.application.ImageService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
-
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping
@@ -42,8 +44,12 @@ public class ImageController {
     public void createCdnUrl(
             @RequestBody OriginalFileInfo originalFileInfo
     ) {
-        imageService.createCdnUrl(originalFileInfo);
-
+        try {
+            imageService.createCdnUrl(originalFileInfo);
+            log.info("원본 이미지 cdnUrl 주입 성공");
+        }catch (Exception e){
+            throw new IllegalArgumentException("원본 이미지 cdnUrl 주입 실패: " + e.getMessage());
+        }
     }
 
     // 리사이즈 WebP 이미지 DB 저장
