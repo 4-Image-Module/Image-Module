@@ -9,7 +9,7 @@ import com.sksamuel.scrimage.webp.WebpWriter;
 import image.module.convert.DataClient;
 import image.module.convert.dto.SendKafkaMessage;
 import image.module.convert.dto.UpdateImageData;
-import image.module.convert.dto.UploadMessage;
+import image.module.convert.dto.OriginalImageResponse;
 import io.minio.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -52,9 +52,9 @@ public class ImageService {
 
   // 전체 이미지 처리 로직을 관리하는 메서드
   @KafkaListener(topics = "image-upload-topic", groupId = "image-upload-group")
-  public void removeMetadataAndCovertWebP(UploadMessage imageUploadMessage) {
-    String StoredFileName = imageUploadMessage.getStoredFileName();
-    Integer size = imageUploadMessage.getRequestSize();
+  public void removeMetadataAndCovertWebP(OriginalImageResponse originalImage) {
+    String StoredFileName = originalImage.getStoredFileName();
+    Integer size = originalImage.getRequestSize();
 
     // 확장자 추출
     String extension = extractExtensionFromMinio(StoredFileName);
