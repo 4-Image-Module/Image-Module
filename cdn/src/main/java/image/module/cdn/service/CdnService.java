@@ -43,12 +43,12 @@ public class CdnService {
         return "http://" + fileUrl + ":" + port + "/cdn/";
     }
 
-    public ImageResponseDto getImage(String cdnUrl) throws IOException {
+    public ImageResponseDto getImage(String cdnUrl) throws IOException, InterruptedException {
         String fileLocation = checkFileExist(cdnUrl);
         return getImageInfo(fileLocation);
     }
 
-    public ImageResponseDto downloadImage(String cdnUrl) throws IOException {
+    public ImageResponseDto downloadImage(String cdnUrl) throws IOException, InterruptedException {
         String convertedCdnUrl = cdnUrl.replace("/download", "");
         String fileLocation = checkFileExist(convertedCdnUrl);
 
@@ -90,15 +90,35 @@ public class CdnService {
         return Files.probeContentType(imagePath);
     }
 
-    // @Cacheable(cacheNames = "fileLocationCache", key = "args[0]")
-    // 같은 클래스에서 한 메서드가 다른 메서드 호출할 때 캐시 적용 안된다고 함
-    public String checkFileExist(String cdnUrl) throws IOException {
+    public String checkFileExist(String cdnUrl) throws IOException, InterruptedException {
         String fileLocation = redisService.getValue(cdnUrl);
         if (fileLocation == null) {
-            fileLocation = getImageAndSave(cdnUrl);
+
+            // 2. Redis에서 락 시도 (5초 동안 락 유지)
+            Boolean isLocked = redisService.setRedisLock(cdnUrl);
+
+            if (isLocked) {
+                fileLocation = getImageAndSave(cdnUrl);
+            } else {
+                while (fileLocation == null) {
+                    Thread.sleep(100);  // 100ms 동안 대기 후 다시 Redis에서 조회
+                    fileLocation = redisService.getValue(cdnUrl);
+                }
+            }
         }
         return fileLocation;
     }
+
+    // @Cacheable(cacheNames = "fileLocationCache", key = "args[0]")
+    // 같은 클래스에서 한 메서드가 다른 메서드 호출할 때 캐시 적용 안된다고 함
+    // Redis Lock 구현 이전 코드
+//    public String checkFileExist(String cdnUrl) throws IOException {
+//        String fileLocation = redisService.getValue(cdnUrl);
+//        if (fileLocation == null) {
+//            fileLocation = getImageAndSave(cdnUrl);
+//        }
+//        return fileLocation;
+//    }
 
     // 이미지 저장
     private String saveImageInCdn(byte[] imageBytes, String fileName) throws IOException {

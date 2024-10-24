@@ -27,9 +27,9 @@ public class CdnController {
             return ResponseEntity.ok()
                     .headers(imageResponseDto.getHeaders())
                     .body(imageResponseDto.getImageBytes());
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             log.error("이미지 조회에서 IOException 발생");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -40,9 +40,9 @@ public class CdnController {
             return ResponseEntity.ok()
                     .headers(imageResponseDto.getHeaders())
                     .body(imageResponseDto.getImageBytes());
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             log.error("이미지 다운로드에서 IOException 발생");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

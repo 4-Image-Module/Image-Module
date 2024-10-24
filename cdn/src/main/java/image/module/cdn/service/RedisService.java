@@ -1,5 +1,6 @@
 package image.module.cdn.service;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -57,5 +58,11 @@ public class RedisService {
     // 값을 Redis에서 삭제하는 메서드
     public void deleteKey(String key) {
         redisTemplate.delete(key);
+    }
+
+    // Lock 설정하는 메서드
+    public Boolean setRedisLock(String key) {
+        return redisTemplate.opsForValue()
+                .setIfAbsent("lock:" + key, "lock_value", Duration.ofSeconds(5));
     }
 }
