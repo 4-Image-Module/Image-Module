@@ -61,14 +61,14 @@ public class CdnService {
         return imageResponseDto;
     }
 
-    private ImageResponseDto getImageInfo(String fileLocation) throws IOException {
+    @Async
+    public ImageResponseDto getImageInfo(String fileLocation) throws IOException {
         ImageResponseDto imageResponseDto = new ImageResponseDto();
 
         byte[] imageBytes = getByteImage(fileLocation);
 
         // 파일의 MIME 타입을 동적으로 추출
         String imageType = getImageType(fileLocation);
-        log.info("이미지 타입: " + imageType);
 
         // 응답 헤더 설정
         HttpHeaders headers = new HttpHeaders();
