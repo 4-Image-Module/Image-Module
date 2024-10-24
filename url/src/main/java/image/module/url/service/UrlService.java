@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.UUID;
 import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +36,6 @@ public class UrlService {
     private String downloadBucket;
 
 
-
     public ResponseEntity<byte[]> fetchImageByte(String cdnUrl) {
         try {
             log.info("받은 CDN URL: {}", cdnUrl);
@@ -45,12 +43,10 @@ public class UrlService {
             //data server에서 image 정보 조회 메서드
             ImageResponse imageResponse = getImageResponse(cdnUrl);
 
-
             // 조회한 이미지에서 storedFileName , originalFileName , fileType 조회
 
             String storegeFileName = imageResponse.getStoredFileName();
             String fileType = imageResponse.getFileType();
-
 
             // file type이 webp이면 minio bucket uploadBucket으로 조회, 그 외는 downloadBucket에서 조회
             String bucketToUse = fileType.equalsIgnoreCase("webp") ? uploadBucket : downloadBucket;
@@ -69,12 +65,11 @@ public class UrlService {
 
             // 헤더 설정
             HttpHeaders headers = new HttpHeaders();
-            String encodedFileName = Base64.getEncoder().encodeToString(imageResponse.getOriginalFileName().getBytes(StandardCharsets.UTF_8));
+            String encodedFileName = URLEncoder.encode(imageResponse.getOriginalFileName(), StandardCharsets.UTF_8);
             headers.add("fileName", encodedFileName);
             headers.add("File-Type", imageResponse.getFileType());
             headers.add("cache-time", imageResponse.getCachingTime().toString());
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-
 
             // ResponseEntity 반환
             return ResponseEntity.ok()
@@ -111,7 +106,7 @@ public class UrlService {
                 .build());
 
         if (inputStream == null) {
-            throw new RuntimeException(storegeFileName+ " 파일에 대한 InputStream이 null입니다.");
+            throw new RuntimeException(storegeFileName + " 파일에 대한 InputStream이 null입니다.");
         }
 
         return inputStream;
@@ -135,30 +130,30 @@ public class UrlService {
         return outputStream.toByteArray();
     }
 
-  // 원본 cdn url 조회
+    // 원본 cdn url 조회
     public ResponseEntity<String> getCdnUrl(UUID id) {
         ImageResponse imageResponse = dataService.getImageName(id);
 
-            // cdnUrl이 null인지 확인
-            if (imageResponse == null) {
-                String message = "이미지를 찾을 수 없거나 CDN URL이 없습니다.";
-                log.warn(message);
-                return ResponseEntity.ok(message); // 200 OK와 함께 메시지 반환
-            }
+        // cdnUrl이 null인지 확인
+        if (imageResponse == null) {
+            String message = "이미지를 찾을 수 없거나 CDN URL이 없습니다.";
+            log.warn(message);
+            return ResponseEntity.ok(message); // 200 OK와 함께 메시지 반환
+        }
 
-            String cdnUrl = imageResponse.getCdnUrl();
-            log.info("CDN URL: {}", cdnUrl);
+        String cdnUrl = imageResponse.getCdnUrl();
+        log.info("CDN URL: {}", cdnUrl);
 
-            return ResponseEntity.ok(cdnUrl); // 정상적으로 CDN URL 반환
+        return ResponseEntity.ok(cdnUrl); // 정상적으로 CDN URL 반환
     }
 
     public ResponseEntity<String> getReCdnUrl(UUID originalFileUUID, Integer size) {
 
-        log.info("fetch service : uuid"+originalFileUUID+"size"+size);
-        ImageResponse imageResponse = dataService.getReCdnUrl(originalFileUUID,size);
+        log.info("fetch service : uuid" + originalFileUUID + "size" + size);
+        ImageResponse imageResponse = dataService.getReCdnUrl(originalFileUUID, size);
 
-        if(imageResponse == null) {
-            String message ="이미지를 찾을 수 없거나 CDN URL 이 없습니다.";
+        if (imageResponse == null) {
+            String message = "이미지를 찾을 수 없거나 CDN URL 이 없습니다.";
             log.warn(message);
             return ResponseEntity.ok(message);
         }

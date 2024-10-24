@@ -4,6 +4,7 @@ import image.module.cdn.client.UrlServiceClient;
 import image.module.cdn.dto.ImageResponseDto;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -43,12 +44,12 @@ public class CdnService {
         return "http://" + fileUrl + ":" + port + "/cdn/";
     }
 
-    public ImageResponseDto getImage(String cdnUrl) throws IOException {
+    public ImageResponseDto getImage(String cdnUrl) throws IOException, InterruptedException {
         String fileLocation = checkFileExist(cdnUrl);
         return getImageInfo(fileLocation);
     }
 
-    public ImageResponseDto downloadImage(String cdnUrl) throws IOException {
+    public ImageResponseDto downloadImage(String cdnUrl) throws IOException, InterruptedException {
         String convertedCdnUrl = cdnUrl.replace("/download", "");
         String fileLocation = checkFileExist(convertedCdnUrl);
 
@@ -61,14 +62,14 @@ public class CdnService {
         return imageResponseDto;
     }
 
-    private ImageResponseDto getImageInfo(String fileLocation) throws IOException {
+    @Async
+    public ImageResponseDto getImageInfo(String fileLocation) throws IOException {
         ImageResponseDto imageResponseDto = new ImageResponseDto();
 
         byte[] imageBytes = getByteImage(fileLocation);
 
         // 파일의 MIME 타입을 동적으로 추출
         String imageType = getImageType(fileLocation);
-        log.info("이미지 타입: " + imageType);
 
         // 응답 헤더 설정
         HttpHeaders headers = new HttpHeaders();
@@ -90,15 +91,35 @@ public class CdnService {
         return Files.probeContentType(imagePath);
     }
 
-    // @Cacheable(cacheNames = "fileLocationCache", key = "args[0]")
-    // 같은 클래스에서 한 메서드가 다른 메서드 호출할 때 캐시 적용 안된다고 함
-    public String checkFileExist(String cdnUrl) throws IOException {
+    public String checkFileExist(String cdnUrl) throws IOException, InterruptedException {
         String fileLocation = redisService.getValue(cdnUrl);
         if (fileLocation == null) {
-            fileLocation = getImageAndSave(cdnUrl);
+
+            // 2. Redis에서 락 시도 (5초 동안 락 유지)
+            Boolean isLocked = redisService.setRedisLock(cdnUrl);
+
+            if (isLocked) {
+                fileLocation = getImageAndSave(cdnUrl);
+            } else {
+                while (fileLocation == null) {
+                    Thread.sleep(100);  // 100ms 동안 대기 후 다시 Redis에서 조회
+                    fileLocation = redisService.getValue(cdnUrl);
+                }
+            }
         }
         return fileLocation;
     }
+
+    // @Cacheable(cacheNames = "fileLocationCache", key = "args[0]")
+    // 같은 클래스에서 한 메서드가 다른 메서드 호출할 때 캐시 적용 안된다고 함
+    // Redis Lock 구현 이전 코드
+//    public String checkFileExist(String cdnUrl) throws IOException {
+//        String fileLocation = redisService.getValue(cdnUrl);
+//        if (fileLocation == null) {
+//            fileLocation = getImageAndSave(cdnUrl);
+//        }
+//        return fileLocation;
+//    }
 
     // 이미지 저장
     private String saveImageInCdn(byte[] imageBytes, String fileName) throws IOException {
@@ -184,7 +205,7 @@ public class CdnService {
         byte[] imageByte = imageResponse.getBody();
 
         // Header에서 필요한 값들 추출
-        String headerFileName = headers.getFirst("fileName");
+        String headerFileName = URLDecoder.decode(headers.getFirst("fileName"), StandardCharsets.UTF_8);
         String headerCachingTime = headers.getFirst("cache-time");
 
         // 필요한 값들 가공
@@ -192,7 +213,7 @@ public class CdnService {
         Integer cachingTime = Integer.parseInt(headerCachingTime);
 
         // 확장자 추출
-        String fileExtension = headerFileName.substring(headerFileName.lastIndexOf("."));
+        String fileExtension = headerFileName.substring(headerFileName.lastIndexOf(".") + 1);
 
         // cdn에 저장할 이미지 이름 생성
         String cdnImageName = cdnUrl.replace(getPartCdnUrl(), "");
@@ -222,6 +243,7 @@ public class CdnService {
         }
 
         // originalName_cdnImageName.확장자 - _cdnImageName
-        return removeFilePath.substring(0, startIndex) + removeFilePath.substring(endIndex);
+        String originalImageName = removeFilePath.substring(0, startIndex) + removeFilePath.substring(endIndex);
+        return URLEncoder.encode(originalImageName, StandardCharsets.UTF_8);
     }
 }
