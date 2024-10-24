@@ -66,9 +66,8 @@ public class ResizeService {
     CreateResizeRequest createResizeImageInfo = CreateResizeRequest.create(uploadName, size, cdnBaseUrl);
     dataClient.createResizeImage(createResizeImageInfo);
 
-    // 임시 파일 삭제
-
-
+    // 8. 임시 파일 삭제
+    cleanupTemporaryFiles(copyOriginalFile, resizeFile);
 
   }
 
@@ -171,5 +170,16 @@ public class ResizeService {
     }
   }
 
+  // 8. 임시 파일 삭제
+  private void cleanupTemporaryFiles(File... files) {
+    for (File file : files) {
+      if (file.exists()) {
+        boolean deleted = file.delete();
+        if (!deleted) {
+          throw new IllegalArgumentException("임시 파일 삭제 실패: " + file.getAbsolutePath());
+        }
+      }
+    }
+  }
 
 }

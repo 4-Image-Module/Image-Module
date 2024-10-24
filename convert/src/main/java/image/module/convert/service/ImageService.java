@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -66,11 +65,11 @@ public class ImageService {
     // 원본 이미지 복사
     File copyOriginalFile = copyOriginalImage(originalFile, extension);
 
-  //  4. MINIO 원본 이미지 삭제
+    //  4. MINIO 원본 이미지 삭제
     removeOriginalImage(StoredFileName);
 
     // 5. EXIF 메타 데이터 삭제 및 이미지 회전 처리
-    File  checkedRotate = removeMetadataAndFixOrientation(copyOriginalFile, extension);
+    File checkedRotate = removeMetadataAndFixOrientation(copyOriginalFile, extension);
     // MINIO로 업로드
     uploadImageToMinio(checkedRotate, StoredFileName, extension);
 
@@ -81,15 +80,14 @@ public class ImageService {
     uploadWebPImage(webpFile);
 
     // 8. 원본 이미지 cdnUrl 추가
-    UpdateImageData updateImageDataInfo = UpdateImageData.create(StoredFileName, size, cdnBaseUrl);
+    UpdateImageData updateImageDataInfo = UpdateImageData.create(StoredFileName, cdnBaseUrl);
     dataClient.updateImageData(updateImageDataInfo);
 
     kafkaTemplate.send("image-resize-topic", SendKafkaMessage.createMessage(webpFile.getName(), size));
 
     // 9. 임시 파일 삭제
-    cleanupTemporaryFiles(copyOriginalFile,checkedRotate, webpFile);
+    cleanupTemporaryFiles(copyOriginalFile, checkedRotate, webpFile);
   }
-
 
 
   // 확장자 추출 메서드
