@@ -37,12 +37,12 @@ public class ImageController {
         return getCDNImageName;
     }
 
-    // size, cdnUrl 업데이트
-    @PostMapping("/image/update")
-    public void updateImageData(
-            @RequestBody UpdateImageData updateImageData
+    // 원본 이미지 cdnUrl 추가
+    @PostMapping("/image/create/cdnUrl")
+    public void createCdnUrl(
+            @RequestBody OriginalFileInfo originalFileInfo
     ) {
-        imageService.updateImage(updateImageData); // Image 업데이트 로직
+        imageService.createCdnUrl(originalFileInfo);
 
     }
 

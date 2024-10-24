@@ -4,7 +4,7 @@ import image.module.data.domain.Image;
 import image.module.data.domain.repository.ImageRepository;
 import image.module.data.presentation.CreateResizeRequest;
 import image.module.data.presentation.ImageRequest;
-import image.module.data.presentation.UpdateImageData;
+import image.module.data.presentation.OriginalFileInfo;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,14 +42,13 @@ public class ImageService {
 
     }
 
-    // size, cdnUrl 업데이트
-    public void updateImage(UpdateImageData updateImageData) {
-
-        Image image = imageRepository.findByStoredFileName(updateImageData.getStoredFileName()).orElseThrow(
+    // 원본 이미지 cdnUrl 추가
+    @Transactional
+    public void createCdnUrl(OriginalFileInfo originalFileInfo) {
+        Image image = imageRepository.findByStoredFileName(originalFileInfo.getStoredFileName()).orElseThrow(
                 () ->  new EntityNotFoundException("저장된 파일 이름을 찾을 수 없습니다")
         );
-        image.updateImageData(updateImageData.getCdnBaseUrl());
-        imageRepository.save(image);
+        image.createCdnUrl(originalFileInfo.getCdnBaseUrl());
     }
 
 

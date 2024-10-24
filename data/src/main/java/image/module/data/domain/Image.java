@@ -6,17 +6,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+
 import java.util.UUID;
-import javax.imageio.ImageIO;
 
 import lombok.*;
 import org.hibernate.annotations.Where;
-import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Builder
@@ -60,7 +54,7 @@ public class Image extends BaseEntity {
                 .build();
     }
 
-    public void updateImageData(String cdnUrl){
+    public void createCdnUrl(String cdnUrl){
         this.cdnUrl = cdnUrl;
     }
 

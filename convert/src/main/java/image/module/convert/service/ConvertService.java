@@ -9,7 +9,7 @@ import com.sksamuel.scrimage.webp.WebpWriter;
 import image.module.convert.DataClient;
 import image.module.convert.dto.OriginalImageResponse;
 import image.module.convert.dto.SendKafkaMessage;
-import image.module.convert.dto.UpdateImageData;
+import image.module.convert.dto.OriginalFileInfo;
 import io.minio.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -72,8 +72,8 @@ public class ConvertService {
     uploadImageToMinio(checkedRotate, storedFileName, extension);
 
     // 6. 원본 이미지 cdnUrl 추가
-    UpdateImageData updateImageDataInfo = UpdateImageData.create(storedFileName, cdnBaseUrl);
-    dataClient.updateImageData(updateImageDataInfo);
+    OriginalFileInfo originalFileInfo = OriginalFileInfo.createCdnUrl(storedFileName, cdnBaseUrl);
+    dataClient.createCdnUrl(originalFileInfo);
 
     // 7. WebP로 변환
     File webpFile = convertToWebp(storedFileName, originalFile);
