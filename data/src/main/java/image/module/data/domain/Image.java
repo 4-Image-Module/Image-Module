@@ -1,6 +1,6 @@
 package image.module.data.domain;
 
-import image.module.data.presentation.CreateResizeRequest;
+import image.module.data.presentation.ResizeRequestDto;
 import image.module.data.presentation.ImageRequest;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -62,7 +62,7 @@ public class Image extends BaseEntity {
         this.originalFileUUID = this.id;
     }
 
-    public static Image createResize(Image image, CreateResizeRequest createResizeRequest){
+    public static Image createResizeImage(Image image, ResizeRequestDto createResizeRequest){
         return Image.builder()
                 .originalFileName(image.getOriginalFileName())
                 .storedFileName(createResizeRequest.getStoredFileName() + "_" + createResizeRequest.getSize())

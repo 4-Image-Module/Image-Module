@@ -3,14 +3,13 @@ package image.module.resize.service;
 import com.sksamuel.scrimage.ImmutableImage;
 import com.sksamuel.scrimage.webp.WebpWriter;
 import image.module.resize.DataClient;
-import image.module.resize.dto.CreateResizeRequest;
+import image.module.resize.dto.ResizeRequestDto;
 import image.module.resize.dto.ReceiveKafkaMessage;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
@@ -58,8 +57,8 @@ public class ResizeService {
     uploadWebPImage(resizeFile);
 
     // 6. 리사이징 된 WebP 이미지 DB 생성
-    CreateResizeRequest createResizeImageInfo = CreateResizeRequest.create(uploadName, size, cdnBaseUrl);
-    dataClient.createResizeImage(createResizeImageInfo);
+    ResizeRequestDto resizeRequestDto = ResizeRequestDto.createResizeImage(uploadName, size, cdnBaseUrl);
+    dataClient.createResizeImage(resizeRequestDto);
 
     // 7. 임시 파일 삭제
     cleanupTemporaryFiles(originalFile, resizeFile);
