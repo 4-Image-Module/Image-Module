@@ -5,7 +5,7 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
-public class UploadMessage {
+public class OriginalImageResponse {
     private String storedFileName;
     private Integer requestSize;
 }
