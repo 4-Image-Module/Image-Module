@@ -213,7 +213,7 @@ public class CdnService {
         Integer cachingTime = Integer.parseInt(headerCachingTime);
 
         // 확장자 추출
-        String fileExtension = headerFileName.substring(headerFileName.lastIndexOf("."));
+        String fileExtension = headerFileName.substring(headerFileName.lastIndexOf(".") + 1);
 
         // cdn에 저장할 이미지 이름 생성
         String cdnImageName = cdnUrl.replace(getPartCdnUrl(), "");
@@ -243,6 +243,7 @@ public class CdnService {
         }
 
         // originalName_cdnImageName.확장자 - _cdnImageName
-        return removeFilePath.substring(0, startIndex) + removeFilePath.substring(endIndex);
+        String originalImageName = removeFilePath.substring(0, startIndex) + removeFilePath.substring(endIndex);
+        return URLEncoder.encode(originalImageName, StandardCharsets.UTF_8);
     }
 }

@@ -38,6 +38,10 @@ public class RedisExpirationListener implements MessageListener {
     }
 
     private void handleExpiredKey(String key) throws IOException {
+        if (key.contains("lock:")) {
+            return;
+        }
+
         // TTL 만료 시 실행할 비즈니스 로직
         String value = redisService.getValue("backup_" + key);
 
